@@ -1,109 +1,123 @@
 #include <iostream>
+#include <vector>
+#include <string>
+
 using namespace std;
 
-char board[3][3] = {
-    {'1', '2', '3'},
-    {'4', '5', '6'},
-    {'7', '8', '9'}
-};
-
-char current_marker;
-int current_player;
-
-void drawBoard() {
-    cout << "\n";
-    cout << " " << board[0][0] << " | " << board[0][1] << " | " << board[0][2] << "\n";
-    cout << "---|---|---\n";
-    cout << " " << board[1][0] << " | " << board[1][1] << " | " << board[1][2] << "\n";
-    cout << "---|---|---\n";
-    cout << " " << board[2][0] << " | " << board[2][1] << " | " << board[2][2] << "\n";
+// Function to initialize the game board
+void initializeBoard(vector<vector<char>>& board) {
+    board = {
+        {' ', ' ', ' '},
+        {' ', ' ', ' '},
+        {' ', ' ', ' '}
+    };
 }
 
-bool placeMarker(int slot) {
-    int row = (slot - 1) / 3;
-    int col = (slot - 1) % 3;
+// Function to display the current game board
+void displayBoard(const vector<vector<char>>& board) {
+    cout << "\nCurrent Board:\n";
+    cout << " " << board[0][0] << " | " << board[0][1] << " | " << board[0][2] << endl;
+    cout << "-----------\n";
+    cout << " " << board[1][0] << " | " << board[1][1] << " | " << board[1][2] << endl;
+    cout << "-----------\n";
+    cout << " " << board[2][0] << " | " << board[2][1] << " | " << board[2][2] << endl << endl;
+}
 
-    if (board[row][col] != 'X' && board[row][col] != 'O') {
-        board[row][col] = current_marker;
+// Function to check if a player has won
+bool checkWin(const vector<vector<char>>& board, char player) {
+    // Check rows and columns
+    for (int i = 0; i < 3; i++) {
+        if ((board[i][0] == player && board[i][1] == player && board[i][2] == player) ||
+            (board[0][i] == player && board[1][i] == player && board[2][i] == player)) {
+            return true;
+        }
+    }
+    // Check diagonals
+    if ((board[0][0] == player && board[1][1] == player && board[2][2] == player) ||
+        (board[0][2] == player && board[1][1] == player && board[2][0] == player)) {
         return true;
-    } else {
-        return false;
+    }
+    return false;
+}
+
+// Function to check if the game is a draw
+bool checkDraw(const vector<vector<char>>& board) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ') {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Function to get valid player move
+void getPlayerMove(vector<vector<char>>& board, char player) {
+    int row, col;
+    while (true) {
+        cout << "Player " << player << ", enter your move (row and column 1-3): ";
+        cin >> row >> col;
+        
+        // Adjust to 0-based index
+        row--;
+        col--;
+        
+        if (row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' ') {
+            board[row][col] = player;
+            break;
+        } else {
+            cout << "Invalid move! Try again.\n";
+        }
     }
 }
 
-int winner() {
-    // Row check
-    for (int i = 0; i < 3; i++) {
-        if (board[i][0] == board[i][1] && board[i][1] == board[i][2])
-            return current_player;
+// Main game function
+void playGame() {
+    vector<vector<char>> board;
+    char currentPlayer = 'X';
+    bool gameOver = false;
+    
+    initializeBoard(board);
+    
+    cout << "Welcome to Tic-Tac-Toe!\n";
+    cout << "Player 1: X\nPlayer 2: O\n";
+    
+    while (!gameOver) {
+        displayBoard(board);
+        getPlayerMove(board, currentPlayer);
+        
+        if (checkWin(board, currentPlayer)) {
+            displayBoard(board);
+            cout << "Player " << currentPlayer << " wins! Congratulations!\n";
+            gameOver = true;
+        } else if (checkDraw(board)) {
+            displayBoard(board);
+            cout << "The game is a draw!\n";
+            gameOver = true;
+        } else {
+            // Switch players
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        }
     }
-
-    // Column check
-    for (int i = 0; i < 3; i++) {
-        if (board[0][i] == board[1][i] && board[1][i] == board[2][i])
-            return current_player;
-    }
-
-    // Diagonal check
-    if (board[0][0] == board[1][1] && board[1][1] == board[2][2])
-        return current_player;
-
-    if (board[0][2] == board[1][1] && board[1][1] == board[2][0])
-        return current_player;
-
-    return 0;
 }
 
-void swap_player_and_marker() {
-    if (current_marker == 'X') current_marker = 'O';
-    else current_marker = 'X';
-
-    if (current_player == 1) current_player = 2;
-    else current_player = 1;
+// Function to ask if players want to play again
+bool askToPlayAgain() {
+    char response;
+    cout << "Would you like to play again? (y/n): ";
+    cin >> response;
+    return (response == 'y' || response == 'Y');
 }
 
 int main() {
-    cout << "Tic Tac Toe 🔥\n";
-    cout << "Player 1, choose your marker (X or O): ";
-    cin >> current_marker;
-
-    current_player = 1;
-
-    int slot;
-    int player_won;
-
-    for (int i = 0; i < 9; i++) {
-        drawBoard();
-        cout << "Player " << current_player << ", choose your slot: ";
-        cin >> slot;
-
-        if (slot < 1 || slot > 9) {
-            cout << "Oye ullu ke patthe, valid number daal (1-9) 😒\n";
-            i--;
-            continue;
-        }
-
-        if (!placeMarker(slot)) {
-            cout << "Chutiya banaya jaa raha hai kya? Slot already taken 😤\n";
-            i--;
-            continue;
-        }
-
-        player_won = winner();
-
-        if (player_won == 1 || player_won == 2) {
-            drawBoard();
-            cout << "Player " << player_won << " jeet gaya re bawale! 🎉\n";
-            break;
-        }
-
-        swap_player_and_marker();
+    bool playAgain = true;
+    
+    while (playAgain) {
+        playGame();
+        playAgain = askToPlayAgain();
     }
-
-    if (player_won == 0) {
-        drawBoard();
-        cout << "Match draw hogaya bhai 😬\n";
-    }
-
+    
+    cout << "Thanks for playing Tic-Tac-Toe!\n";
     return 0;
 }
